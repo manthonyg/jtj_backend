@@ -4,8 +4,6 @@ const helmet = require("helmet");
 const cors = require("cors");
 const { Pool, Client } = require("pg");
 const app = express();
-const longpoll = require("express-longpoll")(app);
-const longpollWithDebug = require("express-longpoll")(app, { DEBUG: true });
 const { connectPostgres } = require("../db/db");
 require("dotenv").config();
 const apiRouter = require("./api/routers/apiRouter");
@@ -28,15 +26,6 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-longpoll.create("/poll");
-
-// longpoll.publish("/poll", stcheckScheduledGames());
-
-// Publish every 5 seconds
-// setInterval(async () => {
-// longpoll.publish("/poll", await checkScheduledGames());
-// }, 10000);
-
 app.get("/", async (req, res) => {
   (async () => {
     // Load the model
@@ -46,23 +35,23 @@ app.get("/", async (req, res) => {
 
     const summary = model.summary();
 
-    const testData = {
-      pitch_type: faker.datatype.number({ min: 1, max: 7 }),
-      release_speed: faker.datatype.number({ min: 80, max: 100 }),
-      zone: faker.datatype.number({ min: 1, max: 9 }),
-      p_throws: faker.datatype.number({ min: 1, max: 2 }),
-      balls: faker.datatype.number({ min: 0, max: 3 }),
-      strikes: faker.datatype.number({ min: 0, max: 2 }),
-      on_3b: faker.datatype.number({ min: 0, max: 1 }),
-      on_2b: faker.datatype.number({ min: 0, max: 1 }),
-      on_1b: faker.datatype.number({ min: 0, max: 1 }),
-      outs_when_up: faker.datatype.number({ min: 0, max: 2 }),
-      pitch_number: faker.datatype.number({ min: 1, max: 8 }),
-      home_score: faker.datatype.number({ min: 0, max: 10 }),
-      away_score: faker.datatype.number({ min: 0, max: 10 }),
-    };
+    // const testData = {
+    //   pitch_type: faker.datatype.number({ min: 1, max: 7 }),
+    //   release_speed: faker.datatype.number({ min: 80, max: 100 }),
+    //   zone: faker.datatype.number({ min: 1, max: 9 }),
+    //   p_throws: faker.datatype.number({ min: 1, max: 2 }),
+    //   balls: faker.datatype.number({ min: 0, max: 3 }),
+    //   strikes: faker.datatype.number({ min: 0, max: 2 }),
+    //   on_3b: faker.datatype.number({ min: 0, max: 1 }),
+    //   on_2b: faker.datatype.number({ min: 0, max: 1 }),
+    //   on_1b: faker.datatype.number({ min: 0, max: 1 }),
+    //   outs_when_up: faker.datatype.number({ min: 0, max: 2 }),
+    //   pitch_number: faker.datatype.number({ min: 1, max: 8 }),
+    //   home_score: faker.datatype.number({ min: 0, max: 10 }),
+    //   away_score: faker.datatype.number({ min: 0, max: 10 }),
+    // };
 
-    console.table(testData);
+    // console.table(testData);
 
     const testSample = tf.tensor2d([Object.values(testData)], [1, 13]);
     const testLabels = tf.oneHot(
@@ -118,19 +107,19 @@ app.post("/predict", async (req, res) => {
     } = req.body;
 
     const data = {
-      pitch_type: pitchType,
-      release_speed: pitchSpeed,
-      zone: zone,
-      p_throws: pitchHand,
-      balls: balls,
-      strikes: strikes,
-      on_3b: runnerOnThird,
-      on_2b: runnerOnSecond,
-      on_1b: runnerOnFirst,
-      outs_when_up: outs,
-      pitch_number: pitchNumber,
-      home_score: homeScore,
-      away_score: awayScore,
+      pitch_type: parseInt(pitchType),
+      release_speed: parseInt(pitchSpeed),
+      zone: parseInt(zone),
+      p_throws: parseInt(pitchHand),
+      balls: parseInt(balls),
+      strikes: parseInt(strikes),
+      on_3b: parseInt(runnerOnThird),
+      on_2b: parseInt(runnerOnSecond),
+      on_1b: parseInt(runnerOnFirst),
+      outs_when_up: parseInt(outs),
+      pitch_number: parseInt(pitchNumber),
+      home_score: parseInt(homeScore),
+      away_score: parseInt(awayScore),
     };
 
     console.table(data);
@@ -144,13 +133,15 @@ app.post("/predict", async (req, res) => {
       modelData.userDefinedMetadata.class_labels.indexOf("event_home_run");
 
     const probabilitiesByIndex = prediction.dataSync().map((x, idx) => {
-      console.log(modelData.userDefinedMetadata.class_labels[idx], x);
-
       return x;
     });
+    console.log(probabilitiesByIndex[hr_idx]);
 
-    console.log({ probabilitiesByIndex });
-    res.json({ data: probabilitiesByIndex });
+    // console.log({ probabilitiesByIndex });
+    res.json({
+      data: probabilitiesByIndex,
+      // average: modelData.userDefinedMetadata.average,
+    });
   })();
 });
 

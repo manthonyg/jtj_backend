@@ -90,33 +90,33 @@ def init():
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
     event_map = {
-        'event_catcher_interf': 0,
-        'event_caught_stealing_2b': 0,
-        'event_caught_stealing_home': 0,
-        'event_double': 1, 
-        'event_double_play': 0,
-        'event_field_error': 0,
-        'event_field_out': 1,
-        'event_fielders_choice': 0,
-        'event_fielders_choice_out': 0,
-        'event_force_out': 0,
-        'event_grounded_into_double_play': 0,
-        'event_hit_by_pitch': 0, 
-        'event_home_run': 2,
-        'event_other_out': 0,
-        'event_sac_fly': 0,
-        'event_single': 1,
-        'event_strikeout': 1,
-        'event_strikeout_double_play': 0,
-        'event_triple': 1,
-        'event_walk': 0,
-        'event_0': 0
-    }
+    'event_catcher_interf': 0,
+    'event_caught_stealing_2b': 0,
+    'event_caught_stealing_home': 0,
+    'event_double': 0.3,
+    'event_double_play': 0,
+    'event_field_error': 0.1,
+    'event_field_out': 0,
+    'event_fielders_choice': 0,
+    'event_fielders_choice_out': 0,
+    'event_force_out': 0,
+    'event_grounded_into_double_play': 0,
+    'event_hit_by_pitch': 0,
+    'event_home_run': 1.5,
+    'event_other_out': 0,
+    'event_sac_fly': 0.5,
+    'event_single': 0.1,
+    'event_strikeout': 0,
+    'event_strikeout_double_play': 0,
+    'event_triple': 0.6,
+    'event_walk': 0.3
+}
+
 
     class_weight = {idx: event_map.get(index, 1.0) for (idx, index) in enumerate(event_indexes)}
 
     # Define number of runs to put it through
-    num_epochs = 99
+    num_epochs = 30
 
     # Shuffle the data
     # np.random.shuffle(x_train)
@@ -125,7 +125,7 @@ def init():
     print(x_train)
 
     # Train the model
-    history = model.fit(x_train, y_train, epochs=num_epochs, class_weight=class_weight, verbose=1 )
+    history = model.fit(x_train, y_train, epochs=num_epochs, verbose=1, class_weight=class_weight )
     print(history.history.keys())
     prediction = model.predict(x_test)
     score = model.evaluate(x_test, y_test, verbose=0)
@@ -149,6 +149,11 @@ def init():
     print(event_home_run_idx)
     print('event_home_run', prediction[:20][event_home_run_idx])
 
+     # Average predictions of home run
+    average_prediction = np.mean(prediction[event_home_run_idx])
+    print("Average prediction:", average_prediction)
+
+
     # Print test summaries
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
@@ -157,6 +162,7 @@ def init():
     # Save the trained model
     model.save("./h5_model/trained_model.h5")
     tfjs.converters.save_keras_model(model, './json_model', metadata={'class_labels': y.columns.tolist()})
+    
 
 
 if __name__ == "__main__":
